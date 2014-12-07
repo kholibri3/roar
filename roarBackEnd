@@ -1,0 +1,450 @@
+package  {
+	
+	import flash.display.MovieClip;
+	import flash.events.MouseEvent;
+	import flash.ui.Mouse;
+	import flash.events.KeyboardEvent;
+	import flash.ui.Keyboard;
+	import flash.ui.Mouse;
+	import flash.sampler.Sample;
+	import flash.utils.Timer;
+	import flash.events.TimerEvent;
+	import flash.net.URLVariables;
+	import flash.net.URLRequestMethod;
+	import flash.net.URLLoader;
+	import flash.net.URLRequest;
+	import flash.events.Event;
+	import flash.errors.IOError;
+	import flash.events.IOErrorEvent;
+	
+	public class BackEndHoller extends MovieClip {
+		
+		var preset1Text : String = "is making me uncomfortable"; 
+		var preset2Text : String = "is very drunk and rude"; 
+		var preset3Text : String = "is invading my space";
+		var post : String;
+		
+		var user : String;
+		
+		var passwordString: String = "";
+		var star: String = "";
+		var password2: String= "";
+		var star2: String = "";
+		
+		var my_req : URLRequest = new URLRequest("http://www.keva12345.blogspot.com/feeds/posts/default?alt=rss");
+		var my_loader : URLLoader = new URLLoader();
+		var my_xml:XML;
+		private var timer:Timer = new Timer(3000);
+		var urlLoader : URLLoader = new URLLoader();
+
+		
+		public function BackEndHoller () {
+			
+			splashScreen.logInSplash.addEventListener(MouseEvent.CLICK, advanceSplashLogIn);
+			splashScreen.signUpSplash.addEventListener(MouseEvent.CLICK, advanceSplashSignUp);
+			
+			signUpScene.signUpBack.addEventListener(MouseEvent.CLICK, signUpGoMethod); 
+			
+			MaleOrFemale.maleButton.addEventListener(MouseEvent.CLICK, youreAMale);
+			MaleOrFemale.femaleButton.addEventListener(MouseEvent.CLICK, youreAFemale);
+			
+			logInScene.logInToEvents.addEventListener(MouseEvent.CLICK, logInToEventsScene); 
+			logInScene.dummyUsername.addEventListener(MouseEvent.CLICK, removeDummy1);
+			logInScene.dummyPassword.addEventListener(MouseEvent.CLICK, removeDummy2);
+			signUpScene.signDummyPassword.addEventListener(MouseEvent.CLICK, removeDummy3);
+			signUpScene.signDummyEmail.addEventListener(MouseEvent.CLICK, removeDummy4);
+			signUpScene.signDummyName.addEventListener(MouseEvent.CLICK, removeDummy5);
+			signUpScene.backButtonSignUp.addEventListener(MouseEvent.CLICK, back1);
+			logInScene.backButtonLogIn.addEventListener(MouseEvent.CLICK, back2);
+			MaleOrFemale.backButtonMaleFemale.addEventListener(MouseEvent.CLICK, back3);
+			
+			maleSceneInstance.maleSceneBack.addEventListener(MouseEvent.CLICK, maleSceneBack);
+			
+			eventNewsFeed.newPost.addEventListener(MouseEvent.CLICK, createAPost);
+			
+			CreateANewPostScene.preset1Button.addEventListener(MouseEvent.CLICK, preset1Clicked); 
+			CreateANewPostScene.preset2Button.addEventListener(MouseEvent.CLICK, preset2Clicked);
+			CreateANewPostScene.preset3Button.addEventListener(MouseEvent.CLICK, preset3Clicked);
+			CreateANewPostScene.submitYourPost.addEventListener(MouseEvent.CLICK, postYourThoughts);
+			
+			toolBarInstance.personIconToolBar.addEventListener(MouseEvent.CLICK, personIconClicked); 
+			toolBarInstance.eventIconToolBar.addEventListener(MouseEvent.CLICK, eventIconClicked);
+			toolBarInstance.dangerIconToolBar.addEventListener(MouseEvent.CLICK, dangerIconClicked);
+			toolBarInstance.phoneIconToolBar.addEventListener(MouseEvent.CLICK, phoneIconClicked);
+			toolBarInstance.aboutIconToolBar.addEventListener(MouseEvent.CLICK, aboutIconClicked);
+			
+			dangerSceneInstance.dangerClickMe.addEventListener(MouseEvent.CLICK, dangerClicked);
+			
+			logInScene.username.border = true; 
+			logInScene.username.type = "input"; 
+		 
+			logInScene.password.border = true; 
+			logInScene.password.type = "input"; 
+		
+			logInScene.password.addEventListener(KeyboardEvent.KEY_DOWN,reportKeyDown); 
+			signUpScene.signUpPassword.addEventListener(KeyboardEvent.KEY_DOWN,reportKeyDown2);
+			
+			my_loader.addEventListener(Event.COMPLETE, xmlLoader);
+			my_loader.load(my_req);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, onError);
+			//urlLoader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, loaderIOErrorHandler);
+			urlLoader.addEventListener(Event.COMPLETE, responseReceived);
+			
+			
+			MaleOrFemale.visible = false; 
+			signUpScene.visible = false;
+			logInScene.visible = false; 
+			eventNewsFeed.visible = false; 
+			CreateANewPostScene.visible = false; 
+			toolBarInstance.visible = false; 
+			dangerSceneInstance.visible = false;
+			PersonSceneInstance.visible = false;
+			ResourcesSceneInstance.visible = false;
+			AboutSceneInstance.visible = false;
+			maleSceneInstance.visible = false; 
+		}
+		
+		/*************************PASSWORD METHODS****************************/ 
+		
+		public function removeDummy1 (e: MouseEvent) : void
+		{
+			logInScene.dummyUsername.visible = false;
+		}
+		
+		public function removeDummy2 (e: MouseEvent) : void
+		{
+			logInScene.dummyPassword.visible = false;
+		}
+		
+		public function removeDummy3 (e: MouseEvent) : void
+		{
+			signUpScene.signDummyPassword.visible = false;
+		}
+		
+		public function removeDummy4 (e: MouseEvent) : void
+		{
+			signUpScene.signDummyEmail.visible = false;
+		}
+		
+		public function removeDummy5 (e: MouseEvent) : void
+		{
+			signUpScene.signDummyName.visible = false;
+		}
+		
+		public function back1 (e: MouseEvent) : void
+		{
+			signUpScene.visible = false;
+			MaleOrFemale.visible = true;
+		}
+		
+		public function back2 (e: MouseEvent) : void
+		{
+			logInScene.visible = false;
+			splashScreen.visible = true;
+		}
+		
+		public function back3 (e: MouseEvent) : void
+		{
+			MaleOrFemale.visible = false;
+			splashScreen.visible = true;
+		}
+		
+		/********************************** RSS CODE *******************************************/
+		
+		public function xmlLoader ( event : Event ): void {
+			//my_xml=new XML(my_loader.data);
+			my_xml = new XML(event.currentTarget.data);  
+			setupoutput_txt();
+		}
+		
+		public function setupoutput_txt() : void { 
+			var i : int; 
+			
+			var date : Array = new Array(); 
+			date.push(eventNewsFeed.instance_date0, eventNewsFeed.instance_date1, eventNewsFeed.instance_date2); 
+			
+			var description : Array = new Array(); 
+			description.push(eventNewsFeed.instance_description0, eventNewsFeed.instance_description1, eventNewsFeed.instance_description2); 
+			
+			
+			for(i = 0; i < 3; i++ ) { 
+				//trace(my_xml.*);
+				//headline[i].text=String(my_xml.channel.item.title[i]);
+				date[i].text=String(my_xml.channel.item.pubDate[i]);
+				description[i].text=String(my_xml.channel.item.description[i]);
+			}
+			
+			timer.addEventListener(TimerEvent.TIMER, refreshScene);
+			timer.start();
+		} 
+		
+		public function refreshScene (e: TimerEvent) : void { 
+			//my_loader.addEventListener(Event.COMPLETE, xmlLoader);
+			my_loader.load(new URLRequest("http://www.keva12345.blogspot.com/feeds/posts/default?alt=rss"));
+			//var my_req : URLRequest = new URLRequest("https://script.google.com/macros/s/AKfycbwrQbZpuyiz3nZFOkxahVPu6E1PHeTYCYgkXHCAi-0-dax599uV/exec?541164862471426048");
+			trace("refresh");
+		}
+		
+		function responseReceived(event: Event) : void { 
+			urlLoader.removeEventListener(Event.COMPLETE, responseReceived); 
+			trace("Email sent!"); 
+		}
+		
+		/*****************************************************************************/
+		
+		public function advanceSplashLogIn (e : MouseEvent) : void { 
+			logInScene.visible = true; 
+			splashScreen.visible = false;
+			logInScene.visible = true; 
+			logInScene.encrypted.visible = false;
+		} 
+		
+		public function advanceSplashSignUp (e : MouseEvent) : void { 
+			splashScreen.visible = false; 
+			MaleOrFemale.visible = true; 
+			logInScene.visible = false;
+			signUpScene.visible = false;
+		} 
+		
+		//FINISH THIS
+		public function youreAMale(e: MouseEvent) : void { 
+			maleSceneInstance.visible = true; 
+		}
+		
+		public function maleSceneBack(e: MouseEvent) : void { 
+			maleSceneInstance.visible = false; 
+			MaleOrFemale.visible = true; 
+		} 
+		
+		public function youreAFemale(e: MouseEvent) : void { 
+			signUpScene.signUpName.border = true; 
+			signUpScene.signUpEmail.border = true; 
+			signUpScene.signUpPassword.border = true;
+			MaleOrFemale.visible = false; 
+			signUpScene.visible = true; 
+			signUpScene.encrypted2.visible = false;
+		}
+		
+		public function signUpGoMethod (e: MouseEvent) : void { 
+			user = signUpScene.signUpName.text; 
+			
+			signUpScene.visible = false; 
+			eventNewsFeed.visible = true;
+			toolBarInstance.visible = true; 
+		} 
+		
+		public function createAPost(e : MouseEvent) : void { 
+			eventNewsFeed.visible = false; 
+			CreateANewPostScene.visible = true; 
+			toolBarInstance.visible = true; 
+		} 
+		
+		public function logInToEventsScene (e : MouseEvent) : void { 
+			trace("inside");
+			logInScene.visible = false; 
+			eventNewsFeed.visible = true; 
+			toolBarInstance.visible = true; 
+		}
+		
+		/*****************************PASSWORD METHODS*********************************/	
+		
+		public function reportKeyDown2(event:KeyboardEvent):void 
+		{ 
+			trace("Key Pressed: " + String.fromCharCode(event.charCode) +
+			"(key code: " + event.keyCode + " character code: " + event.charCode + ")"); 
+		
+			if (event.keyCode == Keyboard.BACKSPACE)
+			{
+				//passwordString = passwordString.slice(0,-1);
+				password2 = password2.substring(0, password2.length - 1);
+
+				star2 = star2.substring(0, star2.length-1);
+			
+				signUpScene.encrypted2.text = star2;
+			}
+		
+			else
+			{
+				password2 = password2 + String.fromCharCode(event.charCode);
+				star2 = star2 + "*";
+				signUpScene.signUpPassword.visible = true;
+				signUpScene.encrypted2.visible = true;
+				signUpScene.encrypted2.text = star2;
+
+			}
+		} 
+		 
+		 public function reportKeyDown(event:KeyboardEvent):void 
+			{ 
+			trace("Key Pressed: " + String.fromCharCode(event.charCode) +
+			" (key code: " + event.keyCode + " character code: " + event.charCode + ")"); 
+		
+			if (event.keyCode == Keyboard.BACKSPACE)
+			{
+				passwordString = passwordString.substring(0, passwordString.length - 1);
+
+				star = star.substring(0, star.length-1);
+				logInScene.encrypted.text = star;
+			}
+		
+			else
+			{
+				passwordString = passwordString + String.fromCharCode(event.charCode);
+				star = star + "*";
+				logInScene.password.visible = true;
+				logInScene.encrypted.visible = true;
+				logInScene.encrypted.text = star;
+			}
+		} 
+		/****************************************************************************************/
+		
+		/*****************************CREATE A NEW POST METHODS *********************************/
+		
+		public function preset1Clicked (e: MouseEvent) : void { 
+			post = preset1Text;
+			CreateANewPostScene.YourCurrentPost.text = CreateANewPostScene.Descriptor.text + " " + post; 
+		} 
+		
+		public function preset2Clicked (e:MouseEvent) : void { 
+			post = preset2Text;
+			CreateANewPostScene.YourCurrentPost.text = CreateANewPostScene.Descriptor.text + " " +  post; 
+		} 
+		
+		public function preset3Clicked (e:MouseEvent) : void { 
+			post = preset3Text; 
+			CreateANewPostScene.YourCurrentPost.text = CreateANewPostScene.Descriptor.text + " " + post; 
+		}
+		
+		public function postYourThoughts (e: MouseEvent) : void { 
+			CreateANewPostScene.visible = false; 
+			eventNewsFeed.visible = true; 
+			toolBarInstance.visible = true; 
+			
+			trace("sending email...maybe...");
+			//var request : URLRequest = new URLRequest("steminist6.hack@blogger.com"+"?subject=Subject"+"&body= Hello world ");
+			
+			var variables : URLVariables = new URLVariables (); 
+			variables.to = "steminist6.keva@blogger.com"; 
+			variables.subject = "Hello"; 
+			variables.message = CreateANewPostScene.Descriptor.text + " " +  post; 
+			//variables.message = "Test Test";
+	
+			//172.20.10.15
+			var request : URLRequest = new URLRequest ("http://localhost:8888/MAIL.php");
+			//var request : URLRequest = new URLRequest("https://boiling-torch-6027.firebaseapp.com/index.php");
+			request.method = URLRequestMethod.GET; 
+			request.data = variables; 
+			
+			//var urlLoader : URLLoader = new URLLoader(); 
+			//urlLoader.addEventListener(Event.COMPLETE, responseReceived);
+			
+			//CreateANewPostScene.Descriptor.text = (" ");
+			//CreateANewPostScene.YourCurrentPost.text = (" ");
+			
+			urlLoader.load(request);
+		}
+		
+		function onError (e:IOErrorEvent) : void {
+				trace("Error");
+		}	
+		
+		/***************************************************************************************/
+		
+		
+		/********************TOOL BAR METHODS**************************/
+		public function personIconClicked (e:MouseEvent) : void { 
+			trace("person");
+			PersonSceneInstance.visible = true;
+			dangerSceneInstance.visible = false;
+			CreateANewPostScene.visible = false;
+			eventNewsFeed.visible = false;
+			toolBarInstance.visible = true;
+			ResourcesSceneInstance.visible = false;
+			AboutSceneInstance.visible = false;
+		} 
+		
+		public function eventIconClicked (e:MouseEvent) : void { 
+			trace("event");
+			dangerSceneInstance.visible = false;
+			CreateANewPostScene.visible = false;
+			PersonSceneInstance.visible = false;
+			eventNewsFeed.visible = true;
+			toolBarInstance.visible = true;
+			ResourcesSceneInstance.visible = false;
+			AboutSceneInstance.visible = false;
+		} 
+		
+		public function dangerIconClicked (e: MouseEvent) : void { 
+			trace("danger");
+			eventNewsFeed.visible = false;
+			PersonSceneInstance.visible = false;
+			CreateANewPostScene.visible = false;
+			dangerSceneInstance.visible = true;
+			toolBarInstance.visible = true;
+			ResourcesSceneInstance.visible = false;
+			AboutSceneInstance.visible = false;
+		} 
+		
+		public function phoneIconClicked (e: MouseEvent) : void { 
+			trace("phone");
+			PersonSceneInstance.visible = false;
+			dangerSceneInstance.visible = false;
+			CreateANewPostScene.visible = false;
+			PersonSceneInstance.visible = false;
+			eventNewsFeed.visible = false;
+			toolBarInstance.visible = true;
+			ResourcesSceneInstance.visible = true;
+			AboutSceneInstance.visible = false;
+		} 
+		
+		public function aboutIconClicked (e: MouseEvent) : void { 
+			trace("about");
+			PersonSceneInstance.visible = false;
+			dangerSceneInstance.visible = false;
+			CreateANewPostScene.visible = false;
+			PersonSceneInstance.visible = false;
+			eventNewsFeed.visible = false;
+			toolBarInstance.visible = true;
+			ResourcesSceneInstance.visible = false;
+			AboutSceneInstance.visible = true;
+		}
+		/**************************************************************/
+		
+		
+		/********************DANGER METHODS**************************/
+		public function dangerClicked (e:MouseEvent) : void { 
+			PersonSceneInstance.visible = false;
+			dangerSceneInstance.visible = false;
+			CreateANewPostScene.visible = false;
+			PersonSceneInstance.visible = false;
+			eventNewsFeed.visible = true;
+			toolBarInstance.visible = true;
+			ResourcesSceneInstance.visible = false;
+			AboutSceneInstance.visible = false;
+			//add new post to newsfeed
+			trace("danger button clicked");
+			
+			CreateANewPostScene.visible = false; 
+			eventNewsFeed.visible = true; 
+			toolBarInstance.visible = true; 
+			
+			trace("sending email...maybe...");
+			//var request : URLRequest = new URLRequest("steminist6.hack@blogger.com"+"?subject=Subject"+"&body= Hello world ");
+			
+			var variables : URLVariables = new URLVariables (); 
+			variables.to = "steminist6.keva@blogger.com"; 
+			variables.subject = "DANGER"; 
+			variables.message = user + " IS IN DANGER"; 
+			
+			var request : URLRequest = new URLRequest ("http://localhost:8888/MAIL.php");
+			request.method = URLRequestMethod.GET; 
+			request.data = variables; 
+			
+			//var urlLoader : URLLoader = new URLLoader(); 
+			//urlLoader.addEventListener(Event.COMPLETE, responseReceived);
+			urlLoader.load(request);
+			
+			
+		} 
+	}
+}
